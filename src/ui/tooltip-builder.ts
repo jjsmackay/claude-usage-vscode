@@ -44,8 +44,8 @@ export function createMainTooltip(
   if (usage.five_hour) {
     const percent = usage.five_hour.utilization
     let limitIcon = '✅'
-    if (percent >= 90) limitIcon = '🔴'
-    else if (percent >= 75) limitIcon = '🟡'
+    if (percent >= 90) {limitIcon = '🔴'}
+    else if (percent >= 75) {limitIcon = '🟡'}
 
     tooltip.appendMarkdown(`#### ${limitIcon} 5-Hour Limit\n\n`)
     tooltip.appendMarkdown(`${createProgressBar(percent)}\n\n`)
@@ -61,8 +61,8 @@ export function createMainTooltip(
   if (usage.seven_day) {
     const percent = usage.seven_day.utilization
     let limitIcon = '✅'
-    if (percent >= 90) limitIcon = '🔴'
-    else if (percent >= 75) limitIcon = '🟡'
+    if (percent >= 90) {limitIcon = '🔴'}
+    else if (percent >= 75) {limitIcon = '🟡'}
 
     tooltip.appendMarkdown(`#### ${limitIcon} 7-Day Limit\n\n`)
     tooltip.appendMarkdown(`${createProgressBar(percent)}\n\n`)
@@ -78,8 +78,8 @@ export function createMainTooltip(
   if (usage.seven_day_opus) {
     const percent = usage.seven_day_opus.utilization
     let limitIcon = '✅'
-    if (percent >= 90) limitIcon = '🔴'
-    else if (percent >= 75) limitIcon = '🟡'
+    if (percent >= 90) {limitIcon = '🔴'}
+    else if (percent >= 75) {limitIcon = '🟡'}
 
     tooltip.appendMarkdown(`#### ${limitIcon} 7-Day Opus Limit\n\n`)
     tooltip.appendMarkdown(`${createProgressBar(percent)}\n\n`)
@@ -95,8 +95,8 @@ export function createMainTooltip(
   if (usage.seven_day_oauth_apps) {
     const percent = usage.seven_day_oauth_apps.utilization
     let limitIcon = '✅'
-    if (percent >= 90) limitIcon = '🔴'
-    else if (percent >= 75) limitIcon = '🟡'
+    if (percent >= 90) {limitIcon = '🔴'}
+    else if (percent >= 75) {limitIcon = '🟡'}
 
     tooltip.appendMarkdown(`#### ${limitIcon} 7-Day OAuth Apps Limit\n\n`)
     tooltip.appendMarkdown(`${createProgressBar(percent)}\n\n`)

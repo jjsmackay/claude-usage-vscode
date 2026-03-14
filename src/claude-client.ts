@@ -3,7 +3,7 @@ import { AuthData, ClaudeUsage } from './types'
 
 export class ClaudeAPIClient {
   private authData: AuthData
-  private baseUrl: string = 'https://api.anthropic.com'
+  private baseUrl = 'https://api.anthropic.com'
   private lastUsage: ClaudeUsage | null = null
 
   constructor(authData: AuthData) {
