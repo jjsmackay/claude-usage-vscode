@@ -35,10 +35,18 @@ export function updateStatusBar(usage: ClaudeUsage, authData: AuthData) {
   const fiveHourPercent = usage.five_hour?.utilization || 0
   const sevenDayPercent = usage.seven_day?.utilization || 0
 
-  // Show the highest usage percentage
-  const displayPercent = Math.max(fiveHourPercent, sevenDayPercent)
+  const config = vscode.workspace.getConfiguration('claudeUsage')
+  const display = config.get<string>('statusBarDisplay', 'both')
 
-  statusBarItem.text = `$(claude-icon) ${displayPercent.toFixed(0)}%`
+  let text: string
+  switch (display) {
+    case 'session':  text = `$(claude-icon) ${fiveHourPercent.toFixed(0)}%`; break
+    case 'weekly':   text = `$(claude-icon) ${sevenDayPercent.toFixed(0)}%`; break
+    case 'highest':  text = `$(claude-icon) ${Math.max(fiveHourPercent, sevenDayPercent).toFixed(0)}%`; break
+    default:         text = `$(claude-icon) ${fiveHourPercent.toFixed(0)}% · ${sevenDayPercent.toFixed(0)}%`; break
+  }
+
+  statusBarItem.text = text
   statusBarItem.color = undefined
   statusBarItem.backgroundColor = undefined
 

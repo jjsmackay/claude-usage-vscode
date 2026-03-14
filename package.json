@@ -59,6 +59,18 @@
           "type": "boolean",
           "default": false,
           "description": "Show notifications when usage is high"
+        },
+        "claudeUsage.statusBarDisplay": {
+          "type": "string",
+          "enum": ["both", "session", "weekly", "highest"],
+          "enumDescriptions": [
+            "Show both session (5h) and weekly (7d): e.g. 45% · 23%",
+            "Show session (5-hour window) only",
+            "Show weekly (7-day window) only",
+            "Show whichever is higher (original behavior)"
+          ],
+          "default": "both",
+          "description": "What to display in the status bar"
         }
       }
     }
