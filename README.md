@@ -1,4 +1,4 @@
-# Claude Stats
+# Claude Usage
 
 Monitor your Claude Code usage and rate limits directly in VS Code.
 
@@ -21,17 +21,17 @@ Monitor your Claude Code usage and rate limits directly in VS Code.
 
 Configure the extension in your VS Code settings:
 
-- `claudeStats.updateInterval`: Update interval in seconds (default: 300 = 5 minutes)
-- `claudeStats.showNotifications`: Show notifications when usage is high (default: false)
+- `claudeUsage.updateInterval`: Update interval in seconds (default: 300 = 5 minutes)
+- `claudeUsage.showNotifications`: Show notifications when usage is high (default: false)
 
 ## Commands
 
-- `Claude Stats: Refresh` - Manually refresh usage data
-- `Claude Stats: Login` - Login to Claude Code
+- `Claude Usage: Refresh` - Manually refresh usage data
+- `Claude Usage: Login` - Login to Claude Code
 
 ## Usage
 
-After installation and authentication, the extension will automatically display your Claude Stats in the status bar, showing:
+After installation and authentication, the extension will automatically display your Claude Usage in the status bar, showing:
 
 - Current token usage
 - Percentage of rate limit used
@@ -69,8 +69,8 @@ MIT
 
 ## Author
 
-Martin Ortiz ([@Maol-1997](https://github.com/Maol-1997))
+Jonathan Mackay ([@jjsmackay](https://github.com/jjsmackay))
 
 ## Repository
 
-[https://github.com/Maol-1997/claude-stats](https://github.com/Maol-1997/claude-stats)
+[https://github.com/jjsmackay/claude-usage-vscode-extension](https://github.com/jjsmackay/claude-usage-vscode-extension)

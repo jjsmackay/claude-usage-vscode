@@ -1,14 +1,17 @@
 {
-  "name": "claude-stats",
-  "author": "Maol-1997",
+  "name": "claude-usage",
+  "author": {
+    "name": "Jonathan Mackay",
+    "url": "https://github.com/jjsmackay"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Maol-1997/claude-stats"
+    "url": "https://github.com/jjsmackay/claude-usage-vscode"
   },
-  "displayName": "Claude Stats",
+  "displayName": "Claude Usage",
   "description": "Monitor your Claude Code usage and rate limits",
-  "version": "1.0.0",
-  "publisher": "MartinOrtiz",
+  "version": "0.2.0",
+  "publisher": "CleverMonkey",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -32,23 +35,27 @@
     },
     "commands": [
       {
-        "command": "claude-stats.refresh",
-        "title": "Refresh Claude Stats"
+        "command": "claude-usage.noop",
+        "title": "Claude Usage: No-op"
       },
       {
-        "command": "claude-stats.login",
+        "command": "claude-usage.refresh",
+        "title": "Refresh Claude Usage"
+      },
+      {
+        "command": "claude-usage.login",
         "title": "Login to Claude Code"
       }
     ],
     "configuration": {
-      "title": "Claude Stats",
+      "title": "Claude Usage",
       "properties": {
-        "claudeStats.updateInterval": {
+        "claudeUsage.updateInterval": {
           "type": "number",
           "default": 300,
           "description": "Update interval in seconds (default: 300 = 5 minutes)"
         },
-        "claudeStats.showNotifications": {
+        "claudeUsage.showNotifications": {
           "type": "boolean",
           "default": false,
           "description": "Show notifications when usage is high"
