@@ -1,13 +1,26 @@
 import { AuthData, ClaudeConfig } from '../types'
 import { MacOSKeychainAccess } from './keychain-access'
+import { CredentialsAccess } from './credentials-access'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
 
+async function getTokenData(): Promise<{
+  accessToken: string
+  subscriptionType?: string
+} | null> {
+  if (process.platform === 'darwin') {
+    const keychain = new MacOSKeychainAccess()
+    return keychain.getClaudeToken()
+  } else {
+    const credFile = new CredentialsAccess()
+    return credFile.getClaudeToken()
+  }
+}
+
 export async function loadAuthData(): Promise<AuthData | null> {
   try {
-    const keychain = new MacOSKeychainAccess()
-    const tokenData = await keychain.getClaudeToken()
+    const tokenData = await getTokenData()
 
     if (!tokenData) {
       return null
