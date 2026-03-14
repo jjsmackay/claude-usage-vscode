@@ -1,5 +1,6 @@
 import { exec } from 'child_process'
 import { promisify } from 'util'
+import { userInfo } from 'os'
 
 const execPromise = promisify(exec)
 
@@ -7,7 +8,7 @@ export class MacOSKeychainAccess {
   private serviceName = 'Claude Code-credentials'
   private accountName: string
 
-  constructor(accountName: string = 'maol') {
+  constructor(accountName: string = userInfo().username) {
     this.accountName = accountName
   }
 
