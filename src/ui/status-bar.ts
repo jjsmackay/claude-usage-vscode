@@ -66,7 +66,7 @@ export function showAuthRequired() {
 /**
  * Show authentication error state
  */
-export function showAuthError(error: any) {
+export function showAuthError(error: unknown) {
   statusBarItem.text = '$(error)'
   statusBarItem.color = new vscode.ThemeColor('errorForeground')
   statusBarItem.tooltip = createAuthErrorTooltip(error)
@@ -93,7 +93,7 @@ export function showFetchError() {
 /**
  * Show update error state
  */
-export function showUpdateError(error: any) {
+export function showUpdateError(error: unknown) {
   statusBarItem.text = '$(warning)'
   statusBarItem.color = new vscode.ThemeColor('editorWarning.foreground')
   statusBarItem.tooltip = createUpdateErrorTooltip(error)

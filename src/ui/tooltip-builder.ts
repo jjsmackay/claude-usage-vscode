@@ -45,13 +45,11 @@ export function createMainTooltip(
   const subType = authData.subscriptionType
     ? formatSubscriptionType(authData.subscriptionType)
     : null
-  if (authData.displayName !== undefined || subType !== null) {
-    const parts = [authData.displayName, subType].filter(
-      (p): p is string => p !== null && p !== undefined,
-    )
-    if (parts.length > 0) {
-      tooltip.appendMarkdown(`$(account) ${parts.join(' · ')}\n\n`)
-    }
+  const parts = [authData.displayName, subType].filter(
+    (p): p is string => p != null,
+  )
+  if (parts.length > 0) {
+    tooltip.appendMarkdown(`$(account) ${parts.join(' · ')}\n\n`)
   }
   tooltip.appendMarkdown(`$(mail) ${authData.email}\n\n`)
 
@@ -65,9 +63,7 @@ export function createMainTooltip(
     { label: 'Apps', window: usage.seven_day_oauth_apps },
   ]
 
-  const hasData = allWindows.some(
-    (w) => w.window !== undefined && w.window !== null,
-  )
+  const hasData = allWindows.some((w) => w.window != null)
 
   if (!hasData) {
     tooltip.appendMarkdown(`$(info) No usage data available.\n\n`)
@@ -75,7 +71,7 @@ export function createMainTooltip(
     tooltip.appendMarkdown(`|  | Progress | | Resets in |\n`)
     tooltip.appendMarkdown(`|:--|:--:|:--:|:--:|\n`)
     for (const { label, window: w } of allWindows) {
-      if (w === undefined || w === null) {
+      if (w == null) {
         continue
       }
       const bar = createProgressBar(w.utilization)
