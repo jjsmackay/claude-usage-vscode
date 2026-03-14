@@ -71,14 +71,20 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "test:unit": "npm run compile && mocha out/test/suite/progress-bar.test.js out/test/suite/time-formatter.test.js --ui tdd --color"
   },
   "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.10",
     "@types/node": "16.x",
     "@types/vscode": "^1.74.0",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
+    "@vscode/test-electron": "^2.5.2",
     "eslint": "^8.28.0",
+    "glob": "^13.0.6",
+    "mocha": "^11.7.5",
     "typescript": "^4.9.3"
   },
   "dependencies": {
