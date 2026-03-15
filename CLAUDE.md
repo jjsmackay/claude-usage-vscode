@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
+npm run vscode:package # Package to .vsix for local install
 npm run compile        # Compile TypeScript to ./out/
 npm run watch          # Watch mode for development
 npm run lint           # ESLint on src/**/*.ts
@@ -22,23 +23,24 @@ To debug the extension: open in VSCode and press F5 (uses `.vscode/launch.json`)
 
 ## Architecture
 
-VSCode extension that polls `https://api.anthropic.com/api/oauth/usage` and renders Claude Code rate-limit usage in the status bar.
+**Claude Status Bar** — VSCode extension that polls `https://api.anthropic.com/api/oauth/usage` and renders Claude Code usage limits (current session and weekly) in the status bar.
 
 ### Layered structure
 
 ```
 extension.ts          Entry point — lifecycle, polling interval, init
+├── types.ts                     Shared interfaces: AuthData, ClaudeConfig, UsageWindow, ClaudeUsage
 ├── auth/
 │   ├── auth-manager.ts          Platform dispatch + ~/.claude.json user info
 │   ├── keychain-access.ts       macOS: reads "Claude Code-credentials" from Keychain
-│   └── credentials-file-access.ts  Linux: reads ~/.claude/.credentials.json
+│   └── credentials-access.ts    Linux: reads ~/.claude/.credentials.json
 ├── claude-client.ts             axios wrapper for /api/oauth/usage; caches last response on error
 ├── services/
 │   └── usage-monitor.ts         Orchestrates fetch → UI update → warning notifications
 ├── ui/
 │   ├── status-bar.ts            VSCode status bar item (right-aligned, priority 100)
-│   ├── tooltip-builder.ts       Markdown tooltips for each status state
-│   └── progress-bar.ts          Emoji progress bar: 🟩<75% 🟨75-89% 🟥≥90% ⬜empty
+│   ├── tooltip-builder.ts       Named tooltip exports per state (main, auth-required, auth-error, updating, fetch-error, update-error)
+│   └── progress-bar.ts          Halfwidth Unicode bar: ［ ￭￭￭･･････ ］ (U+FFED filled, U+FF65 empty), fixed 10-char width
 ├── utils/
 │   └── time-formatter.ts        ISO timestamp → "2h 15m" countdown strings
 └── commands/index.ts            refresh, login, noop commands
@@ -53,5 +55,12 @@ extension.ts          Entry point — lifecycle, polling interval, init
 
 ### Extension configuration (`package.json` contributes)
 
-- `claude-usage.updateInterval` — polling interval in minutes
-- `claude-usage.showNotifications` — warn when any window exceeds 90%
+- `claudeUsage.updateInterval` — polling interval in **seconds** (default: 300 = 5 min)
+- `claudeUsage.showNotifications` — warn when any window exceeds 90%
+- `claudeUsage.statusBarDisplay` — what to show in status bar: `"both"` (default), `"session"`, `"weekly"`, `"highest"`
+
+## Gotchas
+
+- **API error caching**: `ClaudeAPIClient.getUsage()` returns the last successful response on error (not null) — status bar stays populated during transient failures
+- **Auth platform dispatch**: macOS reads credentials from Keychain (`security find-generic-password`); Linux reads from `~/.claude/.credentials.json`
+- **`updateInterval` is in seconds** in config (default 300 = 5 min); `extension.ts` multiplies by 1000 for milliseconds

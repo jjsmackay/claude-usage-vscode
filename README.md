@@ -1,76 +1,37 @@
-# Claude Usage
+# ✼ Claude Usage Status Bar
 
-Monitor your Claude Code usage and rate limits directly in VS Code.
+No more hitting usage limits mid-flow. See your Claude Code current session and weekly limits directly in the VS Code status bar.
 
-## Features
+![Status bar showing ✼ 45% · 23%](resources/screenshot.png)
 
-- 📊 Real-time usage monitoring in the status bar
-- 🔄 Automatic periodic updates (configurable interval)
-- 🎯 Visual progress indicators for token usage
-- ⏱️ Time remaining until rate limit reset
-- 🔔 Optional notifications when usage is high
+## What it does
 
-## Installation
+Sits in your status bar showing real-time utilization across your 5-hour session, 7-day, Opus, and Apps windows. Click it for the full breakdown: progress bars, reset countdowns, account info, the whole thing.
 
-1. Clone this repository
-2. Run `npm install`
-3. Run `npm run compile`
-4. Press `F5` to open a new VS Code window with the extension loaded
+## Settings
 
-## Configuration
+| Setting | Default | Description |
+| ------- | ------- | ------------|
+| Update Interval    | `300`   | How often to poll for usage, in seconds |
+| Status Bar Display | `Both`  | Which usage stat to display: `Session`, `Weekly` or `Both` |
+| Show Notifications | `False` | Get pinged when any window hits 90% |
 
-Configure the extension in your VS Code settings:
+## Authentication
 
-- `claudeUsage.updateInterval`: Update interval in seconds (default: 300 = 5 minutes)
-- `claudeUsage.showNotifications`: Show notifications when usage is high (default: false)
+The extension reads your existing Claude Code credentials, no separate login needed.
 
-## Commands
+**macOS:** reads the OAuth token directly from your system Keychain (added by Claude Code on login).
 
-- `Claude Usage: Refresh` - Manually refresh usage data
-- `Claude Usage: Login` - Login to Claude Code
+**Linux:** reads from `~/.claude/.credentials.json`.
 
-## Usage
+User info (name, email, subscription type) is pulled from `~/.claude.json`.
 
-After installation and authentication, the extension will automatically display your Claude Usage in the status bar, showing:
-
-- Current token usage
-- Percentage of rate limit used
-- Time until rate limit reset
-
-Click the status bar item to see detailed information.
+If the status bar shows an auth error, re-run `claude` in your terminal to refresh your credentials, then reload the VS Code window.
 
 ## Requirements
 
-- VS Code 1.74.0 or higher
-- Active Claude Code subscription
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Compile TypeScript
-npm run compile
-
-# Watch for changes
-npm run watch
-
-# Run linter
-npm run lint
-
-# Package extension
-npm run vscode:package
-```
+VS Code 1.74.0+, active Claude Code subscription.
 
 ## License
 
-MIT
-
-## Author
-
-Jonathan Mackay ([@jjsmackay](https://github.com/jjsmackay))
-
-## Repository
-
-[https://github.com/jjsmackay/claude-usage-vscode-extension](https://github.com/jjsmackay/claude-usage-vscode-extension)
+MIT - [Jonathan Mackay](https://github.com/jjsmackay)

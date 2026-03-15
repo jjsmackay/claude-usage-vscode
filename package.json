@@ -1,5 +1,5 @@
 {
-  "name": "claude-usage",
+  "name": "claude-monkey-bar",
   "author": {
     "name": "Jonathan Mackay",
     "url": "https://github.com/jjsmackay"
@@ -8,8 +8,8 @@
     "type": "git",
     "url": "https://github.com/jjsmackay/claude-usage-vscode"
   },
-  "displayName": "Claude Usage",
-  "description": "Monitor your Claude Code usage and rate limits",
+  "displayName": "Claude Status Bar",
+  "description": "✼ 67% · Claude session and weekly usage limits real-time on the VS Code status bar",
   "version": "0.2.0",
   "publisher": "CleverMonkey",
   "engines": {
@@ -39,7 +39,7 @@
       }
     ],
     "configuration": {
-      "title": "Claude Usage",
+      "title": "Claude Status Bar",
       "properties": {
         "claudeUsage.updateInterval": {
           "type": "number",
@@ -53,7 +53,12 @@
         },
         "claudeUsage.statusBarDisplay": {
           "type": "string",
-          "enum": ["both", "session", "weekly", "highest"],
+          "enum": [
+            "both",
+            "session",
+            "weekly",
+            "highest"
+          ],
           "enumDescriptions": [
             "Show both session (5h) and weekly (7d): e.g. 45% · 23%",
             "Show session (5-hour window) only",
