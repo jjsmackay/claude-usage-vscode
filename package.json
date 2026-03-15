@@ -24,15 +24,6 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "icons": {
-      "claude-icon": {
-        "description": "Claude Icon",
-        "default": {
-          "fontPath": "resources/claude.woff",
-          "fontCharacter": "\\e900"
-        }
-      }
-    },
     "commands": [
       {
         "command": "claude-usage.noop",

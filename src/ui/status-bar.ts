@@ -20,7 +20,7 @@ export function createStatusBarItem(): vscode.StatusBarItem {
     100,
   )
 
-  statusBarItem.text = '$(claude-icon) $(sync~spin)'
+  statusBarItem.text = '✼ $(sync~spin)'
   statusBarItem.tooltip = 'Initializing Claude Stats Monitor...'
   statusBarItem.command = 'claude-usage.noop'
   statusBarItem.show()
@@ -40,10 +40,10 @@ export function updateStatusBar(usage: ClaudeUsage, authData: AuthData) {
 
   let text: string
   switch (display) {
-    case 'session':  text = `$(claude-icon) ${fiveHourPercent.toFixed(0)}%`; break
-    case 'weekly':   text = `$(claude-icon) ${sevenDayPercent.toFixed(0)}%`; break
-    case 'highest':  text = `$(claude-icon) ${Math.max(fiveHourPercent, sevenDayPercent).toFixed(0)}%`; break
-    default:         text = `$(claude-icon) ${fiveHourPercent.toFixed(0)}% · ${sevenDayPercent.toFixed(0)}%`; break
+    case 'session':  text = `✼ ${fiveHourPercent.toFixed(0)}%`; break
+    case 'weekly':   text = `✼ ${sevenDayPercent.toFixed(0)}%`; break
+    case 'highest':  text = `✼ ${Math.max(fiveHourPercent, sevenDayPercent).toFixed(0)}%`; break
+    default:         text = `✼ ${fiveHourPercent.toFixed(0)}% · ${sevenDayPercent.toFixed(0)}%`; break
   }
 
   statusBarItem.text = text
@@ -76,7 +76,7 @@ export function showAuthError(error: unknown) {
  * Show updating state
  */
 export function showUpdating() {
-  statusBarItem.text = '$(claude-icon) $(sync~spin)'
+  statusBarItem.text = '✼ $(sync~spin)'
   statusBarItem.color = undefined
   statusBarItem.tooltip = createUpdatingTooltip()
 }
