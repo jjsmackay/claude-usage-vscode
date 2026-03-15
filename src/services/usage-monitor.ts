@@ -7,6 +7,7 @@ import {
   showFetchError,
   showUpdateError,
 } from '../ui/status-bar'
+import { MOCK_AUTH, MOCK_USAGE } from '../mock-data'
 
 let apiClient: ClaudeAPIClient | undefined
 let currentAuthData: AuthData | undefined
@@ -14,9 +15,9 @@ let currentAuthData: AuthData | undefined
 /**
  * Initialize the usage monitor with authentication data
  */
-export function initializeMonitor(authData: AuthData) {
-  currentAuthData = authData
-  apiClient = new ClaudeAPIClient(authData)
+export function initializeMonitor(_authData: AuthData) {
+  currentAuthData = MOCK_AUTH
+  apiClient = new ClaudeAPIClient(MOCK_AUTH)
 }
 
 /**
@@ -31,7 +32,7 @@ export async function updateUsage() {
   try {
     showUpdating()
 
-    const usage = await apiClient.getUsage()
+    const usage = MOCK_USAGE
 
     if (usage) {
       updateStatusBar(usage, currentAuthData)

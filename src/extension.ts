@@ -1,4 +1,5 @@
 import * as vscode from 'vscode'
+import * as fs from 'fs'
 import { loadAuthData } from './auth/auth-manager'
 import {
   createStatusBarItem,
@@ -8,6 +9,8 @@ import {
 } from './ui/status-bar'
 import { initializeMonitor, updateUsage } from './services/usage-monitor'
 import { registerCommands } from './commands'
+import { createMainTooltip } from './ui/tooltip-builder'
+import { MOCK_AUTH, MOCK_USAGE } from './mock-data'
 
 let updateInterval: NodeJS.Timeout | undefined
 
@@ -37,6 +40,15 @@ async function loadAuthAndStartMonitoring() {
 
       // Update immediately
       await updateUsage()
+
+      // SCREENSHOT MOCK: open tooltip as markdown preview
+      const tooltipMd = createMainTooltip(MOCK_USAGE, MOCK_AUTH).value
+      const tmpPath = '/tmp/claude-tooltip-preview.md'
+      fs.writeFileSync(tmpPath, tooltipMd)
+      await vscode.commands.executeCommand(
+        'markdown.showPreview',
+        vscode.Uri.file(tmpPath),
+      )
 
       // Start periodic updates (default 5 minutes)
       const config = vscode.workspace.getConfiguration('claudeUsage')
