@@ -6,7 +6,9 @@ No more hitting usage limits mid-flow. See your Claude Code current session and 
 
 ## What it does
 
-Sits in your status bar showing real-time utilization across your 5-hour session, 7-day, Opus, and Apps windows. Click it for the full breakdown: progress bars, reset countdowns, account info, the whole thing.
+Sits in your status bar showing real-time utilization across your 5-hour session, 7-day, Opus, and Apps windows. Hover for the full breakdown: progress bars, reset countdowns, account info, the whole thing.
+
+Click the item to collapse it down to just the ✼ icon, and click again to expand it back to the percentages. The collapsed/expanded choice is remembered across reloads.
 
 ## Settings
 

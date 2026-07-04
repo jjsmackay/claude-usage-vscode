@@ -14,5 +14,6 @@ suite('Extension Test Suite', () => {
     assert.ok(commands.includes('claude-usage.refresh'))
     assert.ok(commands.includes('claude-usage.login'))
     assert.ok(commands.includes('claude-usage.noop'))
+    assert.ok(commands.includes('claude-usage.toggle'))
   })
 })

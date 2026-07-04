@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
   console.log('Claude Stats Monitor activated')
 
   // Create status bar item
-  const statusBarItem = createStatusBarItem()
+  const statusBarItem = createStatusBarItem(context)
   context.subscriptions.push(statusBarItem)
 
   // Register all commands

@@ -1,15 +1,24 @@
 import * as vscode from 'vscode'
 import { updateUsage } from '../services/usage-monitor'
+import { toggleCollapsed } from '../ui/status-bar'
 
 /**
  * Register all extension commands
  */
 export function registerCommands(context: vscode.ExtensionContext) {
-  // No-op command just to show pointer cursor
+  // No-op command just to show pointer cursor (used by auth/error states)
   const noopCommand = vscode.commands.registerCommand(
     'claude-usage.noop',
     () => {
       // No-op command just to show pointer cursor
+    },
+  )
+
+  // Toggle the status bar between collapsed (icon only) and expanded views
+  const toggleCommand = vscode.commands.registerCommand(
+    'claude-usage.toggle',
+    () => {
+      return toggleCollapsed()
     },
   )
 
@@ -40,6 +49,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
 
   // Register all commands
   context.subscriptions.push(noopCommand)
+  context.subscriptions.push(toggleCommand)
   context.subscriptions.push(refreshCommand)
   context.subscriptions.push(loginCommand)
 }
