@@ -10,7 +10,7 @@
   },
   "displayName": "Claude Status Bar",
   "description": "✼ 67% · Claude session and weekly usage limits real-time on the VS Code status bar",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "CleverMonkey",
   "engines": {
     "vscode": "^1.74.0"
@@ -28,6 +28,10 @@
       {
         "command": "claude-usage.noop",
         "title": "Claude Usage: No-op"
+      },
+      {
+        "command": "claude-usage.toggle",
+        "title": "Claude Usage: Toggle Collapsed / Expanded"
       },
       {
         "command": "claude-usage.refresh",

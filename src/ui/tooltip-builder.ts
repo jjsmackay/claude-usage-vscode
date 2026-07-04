@@ -120,6 +120,9 @@ export function createMainTooltip(
     minute: '2-digit',
   })
   tooltip.appendMarkdown(`$(clock) Updated ${timeStr}\n\n`)
+  tooltip.appendMarkdown(
+    `$(chevron-left) Click the status bar item to collapse / expand\n\n`,
+  )
 
   return tooltip
 }
