@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { updateUsage } from '../services/usage-monitor'
+import { refreshNow } from '../services/usage-monitor'
 
 /**
  * Register all extension commands
@@ -13,11 +13,12 @@ export function registerCommands(context: vscode.ExtensionContext) {
     },
   )
 
-  // Refresh command
+  // Refresh command — re-reads credentials and ignores any active backoff, so
+  // the Retry links in the tooltips do something in every state.
   const refreshCommand = vscode.commands.registerCommand(
     'claude-usage.refresh',
     async () => {
-      await updateUsage()
+      await refreshNow()
     },
   )
 
