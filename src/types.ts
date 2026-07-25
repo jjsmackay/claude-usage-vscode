@@ -63,3 +63,38 @@ export type FetchOutcome =
   | { kind: 'network-error'; message: string; code?: string }
 
 export type FetchFailure = Exclude<FetchOutcome, { kind: 'ok' }>
+
+export interface CachedError {
+  kind: FetchFailure['kind']
+  message: string
+  status?: number
+  at: number
+}
+
+/**
+ * Shared across every VSCode window. Each window runs its own extension host
+ * with its own timers, so this file on disk is the only place they can agree on
+ * what the usage is, when it was last fetched, and when the API may be called
+ * again.
+ */
+export interface UsageCacheRecord {
+  version: number
+  usage: ClaudeUsage | null
+  /** Epoch ms of the last *successful* fetch, by any window. */
+  fetchedAt: number | null
+  lastError: CachedError | null
+  consecutiveFailures: number
+  /** Epoch ms before which no window may call the API. */
+  blockedUntil: number
+  /**
+   * Fingerprint of the access token used for the last attempt. Rate limiting is
+   * enforced per token, so a rotated token means the block no longer applies.
+   */
+  tokenFingerprint: string | null
+  /**
+   * Window key -> the `resets_at` it was last warned about. Shared so that five
+   * windows do not raise five identical notifications, and so a limit is only
+   * announced once per reset cycle.
+   */
+  notifiedResets: Record<string, string>
+}
