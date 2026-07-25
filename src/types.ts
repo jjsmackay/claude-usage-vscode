@@ -3,6 +3,7 @@ export interface AuthData {
   email: string
   displayName?: string
   subscriptionType?: string
+  expiresAt?: number
 }
 
 export interface ClaudeConfig {
@@ -28,6 +29,26 @@ export interface ClaudeUsage {
   seven_day_oauth_apps?: UsageWindow
   seven_day_opus?: UsageWindow
 }
+
+/**
+ * Result of reading the OAuth token from the platform credential store.
+ *
+ * An expired token is reported as its own state rather than as a missing one:
+ * Claude Code rotates the token in place, so "expired right now" is a
+ * recoverable condition that must not put the extension into a terminal state.
+ */
+export type AuthProblem =
+  | { kind: 'expired'; expiresAt: number }
+  | { kind: 'missing'; reason: string }
+
+export type TokenState =
+  | {
+      kind: 'ok'
+      accessToken: string
+      subscriptionType?: string
+      expiresAt?: number
+    }
+  | AuthProblem
 
 /**
  * Outcome of a single usage API call. Every failure mode the endpoint can
