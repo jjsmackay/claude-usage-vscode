@@ -80,7 +80,7 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "test:unit": "npm run compile && mocha out/test/suite/progress-bar.test.js out/test/suite/time-formatter.test.js out/test/suite/fetch-policy.test.js out/test/suite/claude-client.test.js out/test/suite/usage-cache.test.js --ui tdd --color"
+    "test:unit": "npm run compile && mocha out/test/suite/progress-bar.test.js out/test/suite/time-formatter.test.js out/test/suite/fetch-policy.test.js out/test/suite/claude-client.test.js out/test/suite/usage-cache.test.js out/test/suite/usage-rows.test.js --ui tdd --color"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
