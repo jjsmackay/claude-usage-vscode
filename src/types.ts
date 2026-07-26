@@ -63,9 +63,6 @@ export interface ClaudeUsage {
   extra_usage?: ExtraUsage | null
 }
 
-/** The windows a high-usage notification may fire for. */
-export type NotifiableWindow = 'five_hour' | 'seven_day' | 'seven_day_opus'
-
 /**
  * Result of reading the OAuth token from the platform credential store.
  *

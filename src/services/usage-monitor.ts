@@ -6,9 +6,7 @@ import {
   CachedError,
   ClaudeUsage,
   FetchFailure,
-  NotifiableWindow,
   UsageCacheRecord,
-  UsageWindow,
 } from '../types'
 import {
   acquireFetchLock,
@@ -18,6 +16,8 @@ import {
   writeCache,
 } from './usage-cache'
 import { activeBlockUntil, backoffMs, shouldFetch } from './fetch-policy'
+import { buildUsageRows } from '../ui/usage-rows'
+import { decideWarnings } from './usage-warnings'
 import { render } from '../ui/status-bar'
 
 /** How often each window re-reads the shared cache and re-renders. */
@@ -175,15 +175,13 @@ async function tick(force = false): Promise<void> {
   }
 }
 
-const NOTIFIABLE: Array<{ key: NotifiableWindow; label: string }> = [
-  { key: 'five_hour', label: '5-hour' },
-  { key: 'seven_day', label: '7-day' },
-  { key: 'seven_day_opus', label: '7-day Opus' },
-]
-
 /**
  * Raise at most one warning per limit per reset cycle, recording it in the
  * shared cache so the other windows stay quiet.
+ *
+ * Driven by the same rows the tooltip renders, so every limit on display can
+ * warn and a limit the account does not have stays silent — the two views
+ * cannot disagree about which limits exist.
  */
 function applyNotifications(
   record: UsageCacheRecord,
@@ -193,32 +191,11 @@ function applyNotifications(
     .getConfiguration('claudeUsage')
     .get<boolean>('showNotifications')
 
-  const notifiedResets = { ...record.notifiedResets }
-  const warnings: string[] = []
-
-  for (const { key, label } of NOTIFIABLE) {
-    const window = usage[key] as UsageWindow | null | undefined
-    if (!window) {
-      continue
-    }
-
-    const cycle = window.resets_at ?? 'unknown'
-
-    if (window.utilization <= WARN_THRESHOLD) {
-      // Back under the threshold (or a new cycle started) — allow warning again.
-      if (notifiedResets[key] === cycle) {
-        delete notifiedResets[key]
-      }
-      continue
-    }
-
-    if (notifiedResets[key] === cycle) {
-      continue
-    }
-
-    notifiedResets[key] = cycle
-    warnings.push(`${label} limit is ${window.utilization.toFixed(1)}% used`)
-  }
+  const { notifiedResets, warnings } = decideWarnings(
+    buildUsageRows(usage),
+    record.notifiedResets,
+    WARN_THRESHOLD,
+  )
 
   if (enabled && warnings.length > 0) {
     vscode.window.showWarningMessage(
