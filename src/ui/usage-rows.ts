@@ -15,15 +15,22 @@ export interface UsageRow {
  */
 const NAMED_WINDOWS: Array<{
   label: string
+  /** Bare name, used to recognise the same limit arriving twice. */
+  key: string
   pick: (u: ClaudeUsage) => UsageWindow | null | undefined
   isOwnLimit?: boolean
 }> = [
-  { label: '5h', pick: (u) => u.five_hour },
-  { label: '7d', pick: (u) => u.seven_day },
-  { label: 'Opus', pick: (u) => u.seven_day_opus },
-  { label: 'Sonnet', pick: (u) => u.seven_day_sonnet },
-  { label: 'Cowork', pick: (u) => u.seven_day_cowork },
-  { label: 'Apps', pick: (u) => u.seven_day_oauth_apps, isOwnLimit: false },
+  { label: '5h', key: '5h', pick: (u) => u.five_hour },
+  { label: '7d', key: '7d', pick: (u) => u.seven_day },
+  { label: '7d Opus', key: 'opus', pick: (u) => u.seven_day_opus },
+  { label: '7d Sonnet', key: 'sonnet', pick: (u) => u.seven_day_sonnet },
+  { label: '7d Cowork', key: 'cowork', pick: (u) => u.seven_day_cowork },
+  {
+    label: '7d Apps',
+    key: 'apps',
+    pick: (u) => u.seven_day_oauth_apps,
+    isOwnLimit: false,
+  },
 ]
 
 /**
@@ -36,11 +43,14 @@ const NAMED_WINDOWS: Array<{
 export function buildUsageRows(usage: ClaudeUsage): UsageRow[] {
   const rows: UsageRow[] = []
 
-  for (const { label, pick, isOwnLimit } of NAMED_WINDOWS) {
+  const seen = new Set<string>()
+
+  for (const { label, key, pick, isOwnLimit } of NAMED_WINDOWS) {
     const window = pick(usage)
     if (window == null) {
       continue
     }
+    seen.add(key)
     rows.push({
       label,
       utilization: window.utilization,
@@ -48,8 +58,6 @@ export function buildUsageRows(usage: ClaudeUsage): UsageRow[] {
       isOwnLimit: isOwnLimit ?? true,
     })
   }
-
-  const seen = new Set(rows.map((r) => r.label.toLowerCase()))
 
   for (const limit of usage.limits ?? []) {
     if (limit.kind !== 'weekly_scoped') {
@@ -68,7 +76,9 @@ export function buildUsageRows(usage: ClaudeUsage): UsageRow[] {
     }
     seen.add(name.toLowerCase())
     rows.push({
-      label: name,
+      // Scoped limits are weekly, so they carry the same 7d prefix as the
+      // named weekly windows.
+      label: `7d ${name}`,
       utilization: limit.percent,
       resetsAt: limit.resets_at,
       isOwnLimit: true,

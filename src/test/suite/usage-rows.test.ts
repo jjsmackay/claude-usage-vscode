@@ -42,7 +42,7 @@ suite('Usage Rows Test Suite', () => {
       }
       assert.deepStrictEqual(
         buildUsageRows(usage).map((r) => `${r.label}=${r.utilization}`),
-        ['5h=1', '7d=2', 'Opus=3', 'Sonnet=4', 'Cowork=5', 'Apps=6'],
+        ['5h=1', '7d=2', '7d Opus=3', '7d Sonnet=4', '7d Cowork=5', '7d Apps=6'],
       )
     })
 
@@ -59,7 +59,7 @@ suite('Usage Rows Test Suite', () => {
         ],
       }
       const rows = buildUsageRows(usage)
-      assert.deepStrictEqual(rows.map((r) => r.label), ['5h', 'Fable'])
+      assert.deepStrictEqual(rows.map((r) => r.label), ['5h', '7d Fable'])
       assert.strictEqual(rows[1].utilization, 7)
       assert.strictEqual(rows[1].resetsAt, null)
     })
@@ -100,7 +100,7 @@ suite('Usage Rows Test Suite', () => {
       }
       assert.deepStrictEqual(
         buildUsageRows(usage).map((r) => r.label),
-        ['Fable'],
+        ['7d Fable'],
       )
     })
 
@@ -118,7 +118,7 @@ suite('Usage Rows Test Suite', () => {
       }
       assert.deepStrictEqual(
         buildUsageRows(usage).map((r) => r.label),
-        ['Sonnet'],
+        ['7d Sonnet'],
       )
     })
 
@@ -162,7 +162,7 @@ suite('Usage Rows Test Suite', () => {
       }
       assert.deepStrictEqual(
         buildUsageRows(usage).map((r) => r.label),
-        ['Opus'],
+        ['7d Opus'],
       )
     })
 

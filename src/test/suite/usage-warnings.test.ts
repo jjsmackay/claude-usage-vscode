@@ -28,17 +28,15 @@ suite('Usage Warnings Test Suite', () => {
     // The previous implementation only ever warned about 5h, 7d and Opus.
     const rows = [
       row('5h', 91),
-      row('Sonnet', 95),
-      row('Fable', 99),
-      row('Apps', 97),
+      row('7d Sonnet', 95),
+      row('7d Fable', 99),
+      row('7d Apps', 97),
     ]
     const d = decideWarnings(rows, {}, THRESHOLD)
-    assert.deepStrictEqual(d.warnings.map((w) => w.split(' ')[0]), [
-      '5h',
-      'Sonnet',
-      'Fable',
-      'Apps',
-    ])
+    assert.deepStrictEqual(
+      d.warnings.map((w) => w.replace(/ limit is .*$/, '')),
+      ['5h', '7d Sonnet', '7d Fable', '7d Apps'],
+    )
   })
 
   test('stays silent about a limit already announced this cycle', () => {
