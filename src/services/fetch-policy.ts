@@ -32,13 +32,26 @@ export function backoffMs(
 }
 
 /**
- * Decide whether a tick may call the API.
+ * When a backoff is currently in force, the moment it expires; null otherwise.
  *
- * A block left by a previous failure is dropped as soon as the access token
- * changes: the usage endpoint counts rate limits per token, so a token Claude
- * Code has since rotated starts with a clean allowance. Without this, a window
- * that got rate limited would keep serving the penalty on a token that is no
- * longer even in use.
+ * A block is dropped as soon as the access token changes: the usage endpoint
+ * counts rate limits per token, so a token Claude Code has since rotated starts
+ * with a clean allowance. Without this, a window that got rate limited would
+ * keep serving the penalty on a token that is no longer even in use.
+ */
+export function activeBlockUntil(
+  record: UsageCacheRecord,
+  currentFingerprint: string,
+  now: number,
+): number | null {
+  const blockedOnSameToken =
+    now < record.blockedUntil && record.tokenFingerprint === currentFingerprint
+
+  return blockedOnSameToken ? record.blockedUntil : null
+}
+
+/**
+ * Decide whether a tick may call the API.
  */
 export function shouldFetch(
   record: UsageCacheRecord,
@@ -51,10 +64,7 @@ export function shouldFetch(
     return true
   }
 
-  const blockedOnSameToken =
-    now < record.blockedUntil && record.tokenFingerprint === currentFingerprint
-
-  if (blockedOnSameToken) {
+  if (activeBlockUntil(record, currentFingerprint, now) !== null) {
     return false
   }
 
