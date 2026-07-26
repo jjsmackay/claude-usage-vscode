@@ -9,7 +9,13 @@ const row = (
   label: string,
   utilization: number,
   resetsAt: string | null = CYCLE,
-): UsageRow => ({ label, utilization, resetsAt, usedForWarnings: true })
+): UsageRow => ({
+  label,
+  key: label.toLowerCase(),
+  utilization,
+  resetsAt,
+  usedForWarnings: true,
+})
 
 suite('Usage Warnings Test Suite', () => {
   test('says nothing when every limit is under the threshold', () => {

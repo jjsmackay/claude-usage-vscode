@@ -2,6 +2,8 @@ import { ClaudeUsage, UsageWindow } from '../types'
 
 export interface UsageRow {
   label: string
+  /** Lower-case bare name, used for deduplication and as a format placeholder. */
+  key: string
   utilization: number
   resetsAt: string | null
   /**
@@ -58,6 +60,7 @@ export function buildUsageRows(usage: ClaudeUsage): UsageRow[] {
     seen.add(key)
     rows.push({
       label,
+      key,
       utilization: window.utilization,
       resetsAt: window.resets_at,
       usedForWarnings: usedForWarnings ?? true,
@@ -84,6 +87,7 @@ export function buildUsageRows(usage: ClaudeUsage): UsageRow[] {
       // Scoped limits are weekly, so they carry the same 7d prefix as the
       // named weekly windows.
       label: `7d ${name}`,
+      key: name.toLowerCase(),
       utilization: limit.percent,
       resetsAt: limit.resets_at,
       usedForWarnings: true,

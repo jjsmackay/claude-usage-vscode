@@ -3,6 +3,7 @@ import { AuthData, AuthProblem, UsageCacheRecord } from '../types'
 import { formatDuration } from '../utils/time-formatter'
 import { staleAfterMs } from '../services/fetch-policy'
 import { buildUsageRows, highestWarningUtilization } from './usage-rows'
+import { buildFormatTokens, formatStatusBar } from './status-bar-format'
 import {
   createMainTooltip,
   createAuthRequiredTooltip,
@@ -38,15 +39,16 @@ export function createStatusBarItem(): vscode.StatusBarItem {
   return statusBarItem
 }
 
+const DEFAULT_FORMAT = '✼ {5h}% · {7d}%'
+
 function usageText(usage: NonNullable<UsageCacheRecord['usage']>): string {
   const fiveHour = usage.five_hour?.utilization || 0
   const sevenDay = usage.seven_day?.utilization || 0
+  const both = `✼ ${fiveHour.toFixed(0)}% · ${sevenDay.toFixed(0)}%`
 
-  const display = vscode.workspace
-    .getConfiguration('claudeUsage')
-    .get<string>('statusBarDisplay', 'both')
+  const config = vscode.workspace.getConfiguration('claudeUsage')
 
-  switch (display) {
+  switch (config.get<string>('statusBarDisplay', 'both')) {
     case 'session':
       return `✼ ${fiveHour.toFixed(0)}%`
     case 'weekly':
@@ -55,8 +57,15 @@ function usageText(usage: NonNullable<UsageCacheRecord['usage']>): string {
       // Every limit that can raise a warning, not just the two named above, so
       // this figure cannot disagree with the tooltip banner or a notification.
       return `✼ ${highestWarningUtilization(buildUsageRows(usage)).toFixed(0)}%`
+    case 'custom': {
+      const template = config.get<string>('statusBarFormat', DEFAULT_FORMAT)
+      const text = formatStatusBar(template, buildFormatTokens(usage)).trim()
+      // A template that renders to nothing would leave an invisible status bar
+      // item with no way to get back to the settings, so fall back.
+      return text.length > 0 ? text : both
+    }
     default:
-      return `✼ ${fiveHour.toFixed(0)}% · ${sevenDay.toFixed(0)}%`
+      return both
   }
 }
 
