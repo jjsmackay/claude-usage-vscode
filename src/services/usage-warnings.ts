@@ -15,6 +15,9 @@ export interface WarningDecision {
  * per reset cycle: the marker is carried over while it stays above the
  * threshold, dropped once it falls back under, and rebuilt from the current rows
  * so a limit that is no longer reported leaves no marker behind.
+ *
+ * Limits the user's own work does not count against are skipped, matching the
+ * banner and the highest-usage figure: there is nothing to act on.
  */
 export function decideWarnings(
   rows: UsageRow[],
@@ -25,7 +28,7 @@ export function decideWarnings(
   const warnings: string[] = []
 
   for (const row of rows) {
-    if (row.utilization <= thresholdPercent) {
+    if (!row.isOwnLimit || row.utilization <= thresholdPercent) {
       continue
     }
 

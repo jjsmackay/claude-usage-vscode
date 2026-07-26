@@ -26,17 +26,24 @@ suite('Usage Warnings Test Suite', () => {
 
   test('warns for every displayed limit, not a fixed subset', () => {
     // The previous implementation only ever warned about 5h, 7d and Opus.
-    const rows = [
-      row('5h', 91),
-      row('7d Sonnet', 95),
-      row('7d Fable', 99),
-      row('7d Apps', 97),
-    ]
+    const rows = [row('5h', 91), row('7d Sonnet', 95), row('7d Fable', 99)]
     const d = decideWarnings(rows, {}, THRESHOLD)
     assert.deepStrictEqual(
       d.warnings.map((w) => w.replace(/ limit is .*$/, '')),
-      ['5h', '7d Sonnet', '7d Fable', '7d Apps'],
+      ['5h', '7d Sonnet', '7d Fable'],
     )
+  })
+
+  test('says nothing about usage the user does not drive', () => {
+    // OAuth-app usage is shown, but there is nothing the user can do about it,
+    // so it is left out here exactly as it is left out of the banner.
+    const rows = buildUsageRows({
+      five_hour: { utilization: 10, resets_at: CYCLE },
+      seven_day_oauth_apps: { utilization: 99, resets_at: CYCLE },
+    })
+    const d = decideWarnings(rows, {}, THRESHOLD)
+    assert.deepStrictEqual(d.warnings, [])
+    assert.deepStrictEqual(d.notifiedResets, {})
   })
 
   test('stays silent about a limit already announced this cycle', () => {
