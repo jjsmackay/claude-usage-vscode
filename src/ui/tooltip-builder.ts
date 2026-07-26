@@ -1,6 +1,11 @@
 import * as vscode from 'vscode'
 import { AuthData, AuthProblem, CachedError, ClaudeUsage } from '../types'
 import { createProgressBar } from './progress-bar'
+import {
+  buildUsageRows,
+  formatExtraUsage,
+  highestOwnUtilization,
+} from './usage-rows'
 import { formatDuration, formatResetTime } from '../utils/time-formatter'
 
 const USAGE_LINK = 'https://claude.ai/settings/usage'
@@ -107,47 +112,38 @@ export function createMainTooltip(
   tooltip.appendMarkdown(`---\n\n`)
 
   // Usage table
-  const allWindows = [
-    { label: '5h', window: usage.five_hour },
-    { label: '7d', window: usage.seven_day },
-    { label: 'Opus', window: usage.seven_day_opus },
-    { label: 'Apps', window: usage.seven_day_oauth_apps },
-  ]
+  const rows = buildUsageRows(usage)
 
-  const hasData = allWindows.some((w) => w.window != null)
-
-  if (!hasData) {
+  if (rows.length === 0) {
     tooltip.appendMarkdown(`$(info) No usage data available.\n\n`)
   } else {
     tooltip.appendMarkdown(`|  | Progress | | Resets in |\n`)
     tooltip.appendMarkdown(`|:--|:--:|:--:|:--:|\n`)
-    for (const { label, window: w } of allWindows) {
-      if (w == null) {
-        continue
-      }
-      const bar = createProgressBar(w.utilization)
-      const pct = Math.round(w.utilization)
-      const icon = getStatusIcon(w.utilization)
+    for (const row of rows) {
+      const bar = createProgressBar(row.utilization)
+      const pct = Math.round(row.utilization)
+      const icon = getStatusIcon(row.utilization)
       let resetCell = '—'
-      if (w.resets_at !== null) {
-        const t = formatResetTime(w.resets_at)
+      if (row.resetsAt !== null) {
+        const t = formatResetTime(row.resetsAt)
         if (t !== 'Reset time passed') {
           resetCell = t
         }
       }
       tooltip.appendMarkdown(
-        `| **${label}** | \`${bar}\` | ${pct}% ${icon} | ${resetCell} |\n`,
+        `| **${row.label}** | \`${bar}\` | ${pct}% ${icon} | ${resetCell} |\n`,
       )
     }
     tooltip.appendMarkdown(`\n`)
   }
 
+  const credits = formatExtraUsage(usage)
+  if (credits !== null) {
+    tooltip.appendMarkdown(`$(credit-card) Usage credits: ${credits}\n\n`)
+  }
+
   // Alert section (excludes oauth apps)
-  const highestUsage = Math.max(
-    usage.five_hour?.utilization || 0,
-    usage.seven_day?.utilization || 0,
-    usage.seven_day_opus?.utilization || 0,
-  )
+  const highestUsage = highestOwnUtilization(rows)
 
   if (highestUsage > 75) {
     tooltip.appendMarkdown(`---\n\n`)

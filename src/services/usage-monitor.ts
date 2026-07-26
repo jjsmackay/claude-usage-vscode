@@ -6,6 +6,7 @@ import {
   CachedError,
   ClaudeUsage,
   FetchFailure,
+  NotifiableWindow,
   UsageCacheRecord,
   UsageWindow,
 } from '../types'
@@ -141,7 +142,7 @@ async function tick(force = false): Promise<void> {
   }
 }
 
-const NOTIFIABLE: Array<{ key: keyof ClaudeUsage; label: string }> = [
+const NOTIFIABLE: Array<{ key: NotifiableWindow; label: string }> = [
   { key: 'five_hour', label: '5-hour' },
   { key: 'seven_day', label: '7-day' },
   { key: 'seven_day_opus', label: '7-day Opus' },
@@ -163,7 +164,7 @@ function applyNotifications(
   const warnings: string[] = []
 
   for (const { key, label } of NOTIFIABLE) {
-    const window = usage[key] as UsageWindow | undefined
+    const window = usage[key] as UsageWindow | null | undefined
     if (!window) {
       continue
     }

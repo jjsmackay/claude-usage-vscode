@@ -23,12 +23,48 @@ export interface UsageWindow {
   resets_at: string | null
 }
 
-export interface ClaudeUsage {
-  five_hour?: UsageWindow
-  seven_day?: UsageWindow
-  seven_day_oauth_apps?: UsageWindow
-  seven_day_opus?: UsageWindow
+/**
+ * An entry of the API's `limits` array.
+ *
+ * The array carries limits that have no flat top-level field of their own —
+ * notably the weekly allowance scoped to a single model. Its `session` and
+ * `weekly_all` entries duplicate `five_hour` and `seven_day`.
+ */
+export interface UsageLimit {
+  kind: string
+  group?: string
+  percent: number
+  severity?: string
+  resets_at: string | null
+  scope?: {
+    model?: { id: string | null; display_name: string } | null
+    surface?: unknown
+  } | null
+  is_active?: boolean
 }
+
+/** Usage credits that cover requests once the plan limits are reached. */
+export interface ExtraUsage {
+  is_enabled: boolean
+  utilization: number | null
+  used_credits: number | null
+  monthly_limit: number | null
+  currency: string | null
+}
+
+export interface ClaudeUsage {
+  five_hour?: UsageWindow | null
+  seven_day?: UsageWindow | null
+  seven_day_oauth_apps?: UsageWindow | null
+  seven_day_opus?: UsageWindow | null
+  seven_day_sonnet?: UsageWindow | null
+  seven_day_cowork?: UsageWindow | null
+  limits?: UsageLimit[] | null
+  extra_usage?: ExtraUsage | null
+}
+
+/** The windows a high-usage notification may fire for. */
+export type NotifiableWindow = 'five_hour' | 'seven_day' | 'seven_day_opus'
 
 /**
  * Result of reading the OAuth token from the platform credential store.
