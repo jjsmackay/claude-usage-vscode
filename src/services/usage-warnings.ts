@@ -28,7 +28,7 @@ export function decideWarnings(
   const warnings: string[] = []
 
   for (const row of rows) {
-    if (!row.isOwnLimit || row.utilization <= thresholdPercent) {
+    if (!row.usedForWarnings || row.utilization <= thresholdPercent) {
       continue
     }
 

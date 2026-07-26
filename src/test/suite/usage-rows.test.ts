@@ -2,7 +2,7 @@ import * as assert from 'assert'
 import {
   buildUsageRows,
   formatExtraUsage,
-  highestOwnUtilization,
+  highestWarningUtilization,
 } from '../../ui/usage-rows'
 import { ClaudeUsage } from '../../types'
 
@@ -197,9 +197,9 @@ suite('Usage Rows Test Suite', () => {
     })
   })
 
-  suite('highestOwnUtilization', () => {
+  suite('highestWarningUtilization', () => {
     test('is zero with no rows', () => {
-      assert.strictEqual(highestOwnUtilization([]), 0)
+      assert.strictEqual(highestWarningUtilization([]), 0)
     })
 
     test('takes the maximum across the user\'s own limits', () => {
@@ -208,7 +208,7 @@ suite('Usage Rows Test Suite', () => {
         seven_day: win(91),
         seven_day_sonnet: win(45),
       })
-      assert.strictEqual(highestOwnUtilization(rows), 91)
+      assert.strictEqual(highestWarningUtilization(rows), 91)
     })
 
     test('excludes oauth-app usage, which the user cannot hit', () => {
@@ -216,7 +216,7 @@ suite('Usage Rows Test Suite', () => {
         five_hour: win(10),
         seven_day_oauth_apps: win(99),
       })
-      assert.strictEqual(highestOwnUtilization(rows), 10)
+      assert.strictEqual(highestWarningUtilization(rows), 10)
     })
 
     test('counts a per-model scoped limit', () => {
@@ -231,7 +231,7 @@ suite('Usage Rows Test Suite', () => {
           },
         ],
       })
-      assert.strictEqual(highestOwnUtilization(rows), 95)
+      assert.strictEqual(highestWarningUtilization(rows), 95)
     })
   })
 

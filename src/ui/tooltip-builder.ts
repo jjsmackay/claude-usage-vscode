@@ -4,7 +4,7 @@ import { createProgressBar } from './progress-bar'
 import {
   buildUsageRows,
   formatExtraUsage,
-  highestOwnUtilization,
+  highestWarningUtilization,
 } from './usage-rows'
 import { formatDuration, formatResetTime } from '../utils/time-formatter'
 
@@ -143,7 +143,7 @@ export function createMainTooltip(
   }
 
   // Alert section (excludes oauth apps)
-  const highestUsage = highestOwnUtilization(rows)
+  const highestUsage = highestWarningUtilization(rows)
 
   if (highestUsage > 75) {
     tooltip.appendMarkdown(`---\n\n`)

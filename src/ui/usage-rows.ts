@@ -4,8 +4,13 @@ export interface UsageRow {
   label: string
   utilization: number
   resetsAt: string | null
-  /** OAuth-app usage is reported but is not one of the user's own limits. */
-  isOwnLimit: boolean
+  /**
+   * Whether this row feeds the aggregate warning signals — the tooltip banner,
+   * the "highest" status bar mode and the notifications. False for OAuth-app
+   * usage: it is worth showing, but nothing the user can act on. The row's own
+   * status icon is unaffected either way.
+   */
+  usedForWarnings: boolean
 }
 
 /**
@@ -18,7 +23,7 @@ const NAMED_WINDOWS: Array<{
   /** Bare name, used to recognise the same limit arriving twice. */
   key: string
   pick: (u: ClaudeUsage) => UsageWindow | null | undefined
-  isOwnLimit?: boolean
+  usedForWarnings?: boolean
 }> = [
   { label: '5h', key: '5h', pick: (u) => u.five_hour },
   { label: '7d', key: '7d', pick: (u) => u.seven_day },
@@ -29,7 +34,7 @@ const NAMED_WINDOWS: Array<{
     label: '7d Apps',
     key: 'apps',
     pick: (u) => u.seven_day_oauth_apps,
-    isOwnLimit: false,
+    usedForWarnings: false,
   },
 ]
 
@@ -45,7 +50,7 @@ export function buildUsageRows(usage: ClaudeUsage): UsageRow[] {
 
   const seen = new Set<string>()
 
-  for (const { label, key, pick, isOwnLimit } of NAMED_WINDOWS) {
+  for (const { label, key, pick, usedForWarnings } of NAMED_WINDOWS) {
     const window = pick(usage)
     if (window == null) {
       continue
@@ -55,7 +60,7 @@ export function buildUsageRows(usage: ClaudeUsage): UsageRow[] {
       label,
       utilization: window.utilization,
       resetsAt: window.resets_at,
-      isOwnLimit: isOwnLimit ?? true,
+      usedForWarnings: usedForWarnings ?? true,
     })
   }
 
@@ -81,7 +86,7 @@ export function buildUsageRows(usage: ClaudeUsage): UsageRow[] {
       label: `7d ${name}`,
       utilization: limit.percent,
       resetsAt: limit.resets_at,
-      isOwnLimit: true,
+      usedForWarnings: true,
     })
   }
 
@@ -89,12 +94,14 @@ export function buildUsageRows(usage: ClaudeUsage): UsageRow[] {
 }
 
 /**
- * Highest utilization among the user's own limits, which drives the warning
- * banner. OAuth-app usage is excluded: it is not something the user can hit.
+ * Highest utilization among the limits that warnings are based on.
+ *
+ * Shared by the tooltip banner, the "highest" status bar mode and the
+ * notifications, so all three agree on which limits count.
  */
-export function highestOwnUtilization(rows: UsageRow[]): number {
+export function highestWarningUtilization(rows: UsageRow[]): number {
   return rows
-    .filter((r) => r.isOwnLimit)
+    .filter((r) => r.usedForWarnings)
     .reduce((max, r) => Math.max(max, r.utilization), 0)
 }
 

@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import { AuthData, AuthProblem, UsageCacheRecord } from '../types'
 import { formatDuration } from '../utils/time-formatter'
 import { staleAfterMs } from '../services/fetch-policy'
+import { buildUsageRows, highestWarningUtilization } from './usage-rows'
 import {
   createMainTooltip,
   createAuthRequiredTooltip,
@@ -51,7 +52,9 @@ function usageText(usage: NonNullable<UsageCacheRecord['usage']>): string {
     case 'weekly':
       return `✼ ${sevenDay.toFixed(0)}%`
     case 'highest':
-      return `✼ ${Math.max(fiveHour, sevenDay).toFixed(0)}%`
+      // Every limit that can raise a warning, not just the two named above, so
+      // this figure cannot disagree with the tooltip banner or a notification.
+      return `✼ ${highestWarningUtilization(buildUsageRows(usage)).toFixed(0)}%`
     default:
       return `✼ ${fiveHour.toFixed(0)}% · ${sevenDay.toFixed(0)}%`
   }

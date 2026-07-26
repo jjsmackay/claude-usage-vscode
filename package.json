@@ -63,7 +63,7 @@
             "Show both session (5h) and weekly (7d): e.g. 45% · 23%",
             "Show session (5-hour window) only",
             "Show weekly (7-day window) only",
-            "Show whichever is higher (original behavior)"
+            "Show the highest of all limits that can raise a warning"
           ],
           "default": "both",
           "description": "What to display in the status bar"
