@@ -69,7 +69,7 @@
               "Session (5-hour window) only",
               "Weekly (7-day window) only",
               "The highest of all limits that can raise a warning",
-              "Your own layout, written in the Custom Format section below"
+              "Your own layout, written in Status Bar Format below"
             ],
             "default": "both",
             "order": 3,
@@ -83,8 +83,8 @@
         "properties": {
           "claudeUsage.statusBarFormat": {
             "type": "string",
-            "default": "✼ {5h}% · {7d}%",
-            "markdownDescription": "Layout of the status bar, used only while **What to display** is set to `custom`.\n\nA name in braces inserts that limit's utilization as a whole number:\n\n- `{5h}` the session limit, `{7d}` the weekly limit\n- `{haiku}` `{sonnet}` `{opus}` `{fable}` `{mythos}` the weekly limit for one model\n- `{cowork}` `{apps}` the weekly limits for Cowork and for OAuth apps\n- `{max}` the highest limit that can raise a warning\n\nAnything else is written out as typed, so `%`, separators and [product icons](https://code.visualstudio.com/api/references/icons-in-labels) like `$(pulse)` all work. A name that is not on the list above stays visible in the status bar, so a misspelling is easy to spot.\n\nText in square brackets is left out as a whole when a limit named inside it is one the account does not have, which removes the separator along with the value: `✼ {5h}%[ · {opus}%]` shows `✼ 7%` without an Opus limit and `✼ 7% · 82%` with one.\n\nThe four characters `{` `}` `[` `]` are reserved and cannot appear in the text.\n\n**Examples**\n\n- `✼ {5h}% · {7d}%` → `✼ 7% · 3%`\n- `✼ {max}%` → `✼ 95%`\n- `{5h}/{7d}` → `7/3`\n- `$(pulse) {5h}%[ · {fable}%]` → `$(pulse) 7% · 12%`"
+            "default": "✼ {5h}% · {7d}%[ - S:{sonnet}][ - O:{opus}][ - F:{fable}]",
+            "markdownDescription": "Layout of the status bar, used only while **Status Bar Display** is set to `custom`.\n\nA name in braces inserts that limit's utilization as a whole number:\n\n- `{5h}` the session limit, `{7d}` the weekly limit\n- `{haiku}` `{sonnet}` `{opus}` `{fable}` `{mythos}` the weekly limit for one model\n- `{cowork}` `{apps}` the weekly limits for Cowork and for OAuth apps\n- `{max}` the highest limit that can raise a warning\n\nAnything else is written out as typed, so `%`, separators and [product icons](https://code.visualstudio.com/api/references/icons-in-labels) like `$(pulse)` all work. A name that is not on the list above stays visible in the status bar, so a misspelling is easy to spot.\n\nText in square brackets is left out as a whole when a limit named inside it is one the account does not have, which removes the separator along with the value: `✼ {5h}%[ · {opus}%]` shows `✼ 7%` without an Opus limit and `✼ 7% · 82%` with one.\n\nThe four characters `{` `}` `[` `]` are reserved and cannot appear in the text.\n\n**Examples**\n\n- `✼ {5h}% · {7d}%` → `✼ 7% · 3%`\n- `✼ {max}%` → `✼ 95%`\n- `{5h}/{7d}` → `7/3`\n- `$(pulse) {5h}%[ · {fable}%]` → `$(pulse) 7% · 12%`"
           }
         }
       }

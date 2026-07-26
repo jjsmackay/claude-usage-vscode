@@ -39,7 +39,8 @@ export function createStatusBarItem(): vscode.StatusBarItem {
   return statusBarItem
 }
 
-const DEFAULT_FORMAT = '✼ {5h}% · {7d}%'
+/** Kept in step with the default declared for claudeUsage.statusBarFormat. */
+const DEFAULT_FORMAT = '✼ {5h}% · {7d}%[ - S:{sonnet}][ - O:{opus}][ - F:{fable}]'
 
 function usageText(usage: NonNullable<UsageCacheRecord['usage']>): string {
   const fiveHour = usage.five_hour?.utilization || 0
