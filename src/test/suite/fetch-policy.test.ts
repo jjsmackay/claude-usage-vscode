@@ -1,5 +1,10 @@
 import * as assert from 'assert'
-import { backoffMs, shouldFetch, staleAfterMs } from '../../services/fetch-policy'
+import {
+  activeBlockUntil,
+  backoffMs,
+  shouldFetch,
+  staleAfterMs,
+} from '../../services/fetch-policy'
 import { UsageCacheRecord } from '../../types'
 
 const NOW = 1_700_000_000_000
@@ -60,6 +65,27 @@ suite('Fetch Policy Test Suite', () => {
         tokenFingerprint: TOKEN,
       })
       assert.strictEqual(shouldFetch(r, TOKEN, NOW, POLL, true), true)
+    })
+  })
+
+  suite('activeBlockUntil', () => {
+    test('reports the deadline while a backoff is in force', () => {
+      const r = record({ blockedUntil: NOW + 45_000, tokenFingerprint: TOKEN })
+      assert.strictEqual(activeBlockUntil(r, TOKEN, NOW), NOW + 45_000)
+    })
+
+    test('is null once the deadline has passed', () => {
+      const r = record({ blockedUntil: NOW, tokenFingerprint: TOKEN })
+      assert.strictEqual(activeBlockUntil(r, TOKEN, NOW), null)
+    })
+
+    test('is null when there is no backoff at all', () => {
+      assert.strictEqual(activeBlockUntil(record(), TOKEN, NOW), null)
+    })
+
+    test('is null when the token was rotated', () => {
+      const r = record({ blockedUntil: NOW + 45_000, tokenFingerprint: 'old' })
+      assert.strictEqual(activeBlockUntil(r, TOKEN, NOW), null)
     })
   })
 

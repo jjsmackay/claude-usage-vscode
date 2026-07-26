@@ -17,7 +17,7 @@ import {
   releaseFetchLock,
   writeCache,
 } from './usage-cache'
-import { backoffMs, shouldFetch } from './fetch-policy'
+import { activeBlockUntil, backoffMs, shouldFetch } from './fetch-policy'
 import { render } from '../ui/status-bar'
 
 /** How often each window re-reads the shared cache and re-renders. */
@@ -29,7 +29,36 @@ const MIN_INTERVAL_MS = 30000
 const WARN_THRESHOLD = 90
 
 let tickTimer: NodeJS.Timeout | undefined
+let wakeTimer: NodeJS.Timeout | undefined
 let fetching = false
+
+/**
+ * Small margin added when waking for an expired backoff, so the deadline is
+ * comfortably in the past by the time the tick re-reads the clock.
+ */
+const WAKE_MARGIN_MS = 500
+
+/**
+ * Retry the moment the backoff actually expires.
+ *
+ * The tooltip counts the backoff down, so with only a 15s tick it would sit at
+ * "0s" for up to another full tick before anything happened. A one-shot timer
+ * closes that gap; longer waits need nothing, as a regular tick lands first.
+ */
+function scheduleWake(blockedUntil: number): void {
+  const delay = blockedUntil - Date.now() + WAKE_MARGIN_MS
+  if (delay >= TICK_MS) {
+    return
+  }
+
+  if (wakeTimer) {
+    clearTimeout(wakeTimer)
+  }
+  wakeTimer = setTimeout(() => {
+    wakeTimer = undefined
+    safeTick()
+  }, Math.max(0, delay))
+}
 
 function intervalMs(): number {
   const configured =
@@ -82,6 +111,10 @@ async function tick(force = false): Promise<void> {
   const currentFingerprint = fingerprint(token)
 
   if (!shouldFetch(record, currentFingerprint, Date.now(), intervalMs(), force)) {
+    const blockedUntil = activeBlockUntil(record, currentFingerprint, Date.now())
+    if (blockedUntil !== null) {
+      scheduleWake(blockedUntil)
+    }
     return
   }
 
@@ -218,6 +251,10 @@ export function stopMonitor(): void {
   if (tickTimer) {
     clearInterval(tickTimer)
     tickTimer = undefined
+  }
+  if (wakeTimer) {
+    clearTimeout(wakeTimer)
+    wakeTimer = undefined
   }
 }
 
