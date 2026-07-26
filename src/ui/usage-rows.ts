@@ -59,6 +59,13 @@ export function buildUsageRows(usage: ClaudeUsage): UsageRow[] {
     if (!name || seen.has(name.toLowerCase())) {
       continue
     }
+    // A scoped allowance the account is not actually subject to is reported at
+    // 0% and inactive. Claude Code leaves those out, and a row permanently
+    // reading 0% carries no information, so only show one that is either in use
+    // or marked active.
+    if (limit.percent <= 0 && limit.is_active !== true) {
+      continue
+    }
     seen.add(name.toLowerCase())
     rows.push({
       label: name,

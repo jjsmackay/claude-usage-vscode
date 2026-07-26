@@ -64,6 +64,64 @@ suite('Usage Rows Test Suite', () => {
       assert.strictEqual(rows[1].resetsAt, null)
     })
 
+    test('hides a scoped limit reported at 0% and inactive', () => {
+      // What the API actually sends for a model the account has no separate
+      // allowance for; Claude Code shows no such row either.
+      const usage: ClaudeUsage = {
+        five_hour: win(6),
+        seven_day: win(3),
+        limits: [
+          {
+            kind: 'weekly_scoped',
+            percent: 0,
+            resets_at: null,
+            is_active: false,
+            scope: { model: { id: null, display_name: 'Fable' } },
+          },
+        ],
+      }
+      assert.deepStrictEqual(
+        buildUsageRows(usage).map((r) => r.label),
+        ['5h', '7d'],
+      )
+    })
+
+    test('shows a scoped limit at 0% when it is marked active', () => {
+      const usage: ClaudeUsage = {
+        limits: [
+          {
+            kind: 'weekly_scoped',
+            percent: 0,
+            resets_at: null,
+            is_active: true,
+            scope: { model: { id: null, display_name: 'Fable' } },
+          },
+        ],
+      }
+      assert.deepStrictEqual(
+        buildUsageRows(usage).map((r) => r.label),
+        ['Fable'],
+      )
+    })
+
+    test('shows a scoped limit in use even when not marked active', () => {
+      const usage: ClaudeUsage = {
+        limits: [
+          {
+            kind: 'weekly_scoped',
+            percent: 12,
+            resets_at: null,
+            is_active: false,
+            scope: { model: { id: null, display_name: 'Sonnet' } },
+          },
+        ],
+      }
+      assert.deepStrictEqual(
+        buildUsageRows(usage).map((r) => r.label),
+        ['Sonnet'],
+      )
+    })
+
     test('does not duplicate session and weekly_all from limits[]', () => {
       // Those two entries repeat five_hour and seven_day, which are already rows.
       const usage: ClaudeUsage = {
@@ -130,9 +188,11 @@ suite('Usage Rows Test Suite', () => {
           currency: null,
         },
       }
+      // Fable is reported at 0% and inactive, so it stays out — which is what
+      // Claude Code's own panel shows for this account.
       assert.deepStrictEqual(
         buildUsageRows(usage).map((r) => r.label),
-        ['5h', '7d', 'Fable'],
+        ['5h', '7d'],
       )
     })
   })
