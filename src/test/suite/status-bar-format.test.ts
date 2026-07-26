@@ -137,8 +137,19 @@ suite('Status Bar Format Test Suite', () => {
       assert.strictEqual(render('{5h}]'), '7]')
     })
 
-    test('an unterminated section still renders when nothing is missing', () => {
-      assert.strictEqual(render('{5h}[ · {7d}'), '7 · 3')
+    test('an unclosed section shows its bracket instead of acting as a section', () => {
+      // Guessing where it ended would hide the mistake, and dropping it would
+      // hide it twice over.
+      assert.strictEqual(render('{5h}[ · {7d}'), '7[ · 3')
+      assert.strictEqual(render('{5h}[ · {opus}%', BASIC), '7[ · %')
+    })
+
+    test('an unclosed nested section shows only the unclosed bracket', () => {
+      assert.strictEqual(render('{5h}[ a[ b{7d}]', BASIC), '7[ a b3')
+    })
+
+    test('a bracket inside a placeholder does not close a section', () => {
+      assert.strictEqual(render('[{5h}{a]b}]', BASIC), '7{a]b}')
     })
 
     test('an empty template renders empty, for the caller to fall back on', () => {
