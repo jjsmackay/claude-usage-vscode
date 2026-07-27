@@ -1,6 +1,7 @@
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { userInfo } from 'os'
+import { TokenState } from '../types'
 
 const execPromise = promisify(exec)
 
@@ -30,56 +31,60 @@ export class MacOSKeychainAccess {
         error instanceof Error &&
         error.message.includes('could not be found')
       ) {
-        console.error('❌ Credential not found in Keychain')
         return null
       }
       throw error
     }
   }
 
-  async getClaudeToken(): Promise<{
-    accessToken: string
-    subscriptionType?: string
-  } | null> {
+  async getClaudeToken(): Promise<TokenState> {
+    let password: string | null
     try {
-      const password = await this.getPassword()
-      if (!password) {
-        console.error('❌ No password found in Keychain')
-        return null
-      }
-
-      try {
-        const data = JSON.parse(password)
-
-        if (data.claudeAiOauth) {
-          const token = data.claudeAiOauth.accessToken
-          const expiresAt = data.claudeAiOauth.expiresAt
-          const subscriptionType = data.claudeAiOauth.subscriptionType
-
-          if (expiresAt && Date.now() > expiresAt) {
-            console.error(
-              '❌ Token expired at',
-              new Date(expiresAt).toISOString(),
-            )
-            return null
-          }
-
-          console.log('✅ Token retrieved from Keychain')
-          return {
-            accessToken: token,
-            subscriptionType,
-          }
-        }
-
-        console.error('⚠️ claudeAiOauth not found in JSON')
-        return data.accessToken ? { accessToken: data.accessToken } : null
-      } catch (parseError) {
-        // Simple string token
-        return { accessToken: password }
-      }
+      password = await this.getPassword()
     } catch (error) {
-      console.error('❌ Error accessing Keychain:', error)
-      return null
+      return { kind: 'missing', reason: `Keychain error: ${String(error)}` }
     }
+
+    if (!password) {
+      return {
+        kind: 'missing',
+        reason: `"${this.serviceName}" not found in Keychain`,
+      }
+    }
+
+    let data: {
+      claudeAiOauth?: {
+        accessToken?: string
+        expiresAt?: number
+        subscriptionType?: string
+      }
+      accessToken?: string
+    }
+    try {
+      data = JSON.parse(password)
+    } catch (parseError) {
+      // Simple string token
+      return { kind: 'ok', accessToken: password }
+    }
+
+    if (data.claudeAiOauth) {
+      const { accessToken, expiresAt, subscriptionType } = data.claudeAiOauth
+
+      if (!accessToken) {
+        return { kind: 'missing', reason: 'No access token in Keychain entry' }
+      }
+
+      if (expiresAt && Date.now() > expiresAt) {
+        return { kind: 'expired', expiresAt }
+      }
+
+      return { kind: 'ok', accessToken, subscriptionType, expiresAt }
+    }
+
+    if (data.accessToken) {
+      return { kind: 'ok', accessToken: data.accessToken }
+    }
+
+    return { kind: 'missing', reason: 'claudeAiOauth not found in Keychain entry' }
   }
 }
