@@ -1,13 +1,24 @@
 import * as vscode from 'vscode'
-import { ClaudeUsage, AuthData } from '../types'
+import { AuthData, AuthProblem, UsageCacheRecord } from '../types'
+import { formatDuration } from '../utils/time-formatter'
+import { staleAfterMs } from '../services/fetch-policy'
+import { buildUsageRows, highestWarningUtilization } from './usage-rows'
+import { buildFormatTokens, formatStatusBar } from './status-bar-format'
 import {
   createMainTooltip,
   createAuthRequiredTooltip,
-  createAuthErrorTooltip,
-  createUpdatingTooltip,
-  createFetchErrorTooltip,
-  createUpdateErrorTooltip,
+  createTokenExpiredTooltip,
+  createInitializingTooltip,
+  createErrorTooltip,
 } from './tooltip-builder'
+
+export interface ViewState {
+  record: UsageCacheRecord
+  auth: AuthData | null
+  authProblem: AuthProblem | null
+  intervalMs: number
+  fetching: boolean
+}
 
 let statusBarItem: vscode.StatusBarItem
 
@@ -21,82 +32,123 @@ export function createStatusBarItem(): vscode.StatusBarItem {
   )
 
   statusBarItem.text = '✼ $(sync~spin)'
-  statusBarItem.tooltip = 'Initializing Claude Stats Monitor...'
+  statusBarItem.tooltip = 'Starting Claude Status Bar...'
   statusBarItem.command = 'claude-usage.noop'
   statusBarItem.show()
 
   return statusBarItem
 }
 
-/**
- * Update status bar with usage data
- */
-export function updateStatusBar(usage: ClaudeUsage, authData: AuthData) {
-  const fiveHourPercent = usage.five_hour?.utilization || 0
-  const sevenDayPercent = usage.seven_day?.utilization || 0
+/** Kept in step with the default declared for claudeUsage.statusBarFormat. */
+const DEFAULT_FORMAT = '✼ {5h}% · {7d}%[ - S:{sonnet}][ - O:{opus}][ - F:{fable}]'
+
+function usageText(usage: NonNullable<UsageCacheRecord['usage']>): string {
+  const fiveHour = usage.five_hour?.utilization || 0
+  const sevenDay = usage.seven_day?.utilization || 0
+  const both = `✼ ${fiveHour.toFixed(0)}% · ${sevenDay.toFixed(0)}%`
 
   const config = vscode.workspace.getConfiguration('claudeUsage')
-  const display = config.get<string>('statusBarDisplay', 'both')
 
-  let text: string
-  switch (display) {
-    case 'session':  text = `✼ ${fiveHourPercent.toFixed(0)}%`; break
-    case 'weekly':   text = `✼ ${sevenDayPercent.toFixed(0)}%`; break
-    case 'highest':  text = `✼ ${Math.max(fiveHourPercent, sevenDayPercent).toFixed(0)}%`; break
-    default:         text = `✼ ${fiveHourPercent.toFixed(0)}% · ${sevenDayPercent.toFixed(0)}%`; break
+  switch (config.get<string>('statusBarDisplay', 'both')) {
+    case 'session':
+      return `✼ ${fiveHour.toFixed(0)}%`
+    case 'weekly':
+      return `✼ ${sevenDay.toFixed(0)}%`
+    case 'highest':
+      // Every limit that can raise a warning, not just the two named above, so
+      // this figure cannot disagree with the tooltip banner or a notification.
+      return `✼ ${highestWarningUtilization(buildUsageRows(usage)).toFixed(0)}%`
+    case 'custom': {
+      const template = config.get<string>('statusBarFormat', DEFAULT_FORMAT)
+      const text = formatStatusBar(template, buildFormatTokens(usage)).trim()
+      // A template that renders to nothing would leave an invisible status bar
+      // item with no way to get back to the settings, so fall back.
+      return text.length > 0 ? text : both
+    }
+    default:
+      return both
+  }
+}
+
+function apply(
+  text: string,
+  tooltip: vscode.MarkdownString,
+  color?: vscode.ThemeColor,
+): void {
+  statusBarItem.text = text
+  statusBarItem.color = color
+  statusBarItem.backgroundColor = undefined
+  statusBarItem.tooltip = tooltip
+}
+
+/**
+ * Render the whole status bar from the shared state.
+ *
+ * Numbers already on screen are never replaced by a spinner: a poll that fails
+ * or hangs leaves the last known figures visible, and the fact that they are old
+ * is stated explicitly instead of being hidden behind a fresh-looking timestamp.
+ */
+export function render(state: ViewState): void {
+  if (!statusBarItem) {
+    return
   }
 
-  statusBarItem.text = text
-  statusBarItem.color = undefined
-  statusBarItem.backgroundColor = undefined
+  const { record, authProblem, intervalMs, fetching } = state
+  const now = Date.now()
+  const warning = new vscode.ThemeColor('editorWarning.foreground')
+  const error = new vscode.ThemeColor('errorForeground')
 
-  statusBarItem.tooltip = createMainTooltip(usage, authData)
-}
+  const age = record.fetchedAt === null ? null : now - record.fetchedAt
+  const stale = age === null || age > staleAfterMs(intervalMs)
 
-/**
- * Show authentication required state
- */
-export function showAuthRequired() {
-  statusBarItem.text = '$(error)'
-  statusBarItem.color = new vscode.ThemeColor('errorForeground')
-  statusBarItem.tooltip = createAuthRequiredTooltip()
-  statusBarItem.command = 'claude-usage.noop'
-}
+  // No credentials at all: the extension cannot do anything until Claude Code
+  // has been logged into.
+  if (authProblem?.kind === 'missing' && record.usage === null) {
+    apply('$(error)', createAuthRequiredTooltip(authProblem.reason), error)
+    return
+  }
 
-/**
- * Show authentication error state
- */
-export function showAuthError(error: unknown) {
-  statusBarItem.text = '$(error)'
-  statusBarItem.color = new vscode.ThemeColor('errorForeground')
-  statusBarItem.tooltip = createAuthErrorTooltip(error)
-}
+  if (authProblem?.kind === 'expired' && record.usage === null) {
+    apply(
+      '$(warning)',
+      createTokenExpiredTooltip(authProblem.expiresAt),
+      warning,
+    )
+    return
+  }
 
-/**
- * Show updating state
- */
-export function showUpdating() {
-  statusBarItem.text = '✼ $(sync~spin)'
-  statusBarItem.color = undefined
-  statusBarItem.tooltip = createUpdatingTooltip()
-}
+  if (record.usage !== null) {
+    const degraded = stale || record.lastError !== null || authProblem !== null
+    apply(
+      degraded ? `${usageText(record.usage)} $(warning)` : usageText(record.usage),
+      createMainTooltip({
+        usage: record.usage,
+        auth: state.auth,
+        fetchedAt: record.fetchedAt,
+        stale,
+        lastError: record.lastError,
+        authProblem,
+        blockedUntil: record.blockedUntil,
+        fetching,
+      }),
+      degraded ? warning : undefined,
+    )
+    return
+  }
 
-/**
- * Show fetch error state
- */
-export function showFetchError() {
-  statusBarItem.text = '$(warning)'
-  statusBarItem.color = new vscode.ThemeColor('editorWarning.foreground')
-  statusBarItem.tooltip = createFetchErrorTooltip()
-}
+  // Nothing to show yet.
+  if (record.lastError !== null) {
+    const retryIn =
+      record.blockedUntil > now ? record.blockedUntil - now : null
+    const text =
+      record.lastError.kind === 'rate-limited' && retryIn !== null
+        ? `✼ $(watch) ${formatDuration(retryIn)}`
+        : '$(warning)'
+    apply(text, createErrorTooltip(record.lastError, retryIn), warning)
+    return
+  }
 
-/**
- * Show update error state
- */
-export function showUpdateError(error: unknown) {
-  statusBarItem.text = '$(warning)'
-  statusBarItem.color = new vscode.ThemeColor('editorWarning.foreground')
-  statusBarItem.tooltip = createUpdateErrorTooltip(error)
+  apply('✼ $(sync~spin)', createInitializingTooltip(fetching))
 }
 
 /**

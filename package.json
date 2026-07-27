@@ -38,38 +38,57 @@
         "title": "Login to Claude Code"
       }
     ],
-    "configuration": {
-      "title": "Claude Status Bar",
-      "properties": {
-        "claudeUsage.updateInterval": {
-          "type": "number",
-          "default": 300,
-          "description": "Update interval in seconds (default: 300 = 5 minutes)"
-        },
-        "claudeUsage.showNotifications": {
-          "type": "boolean",
-          "default": false,
-          "description": "Show notifications when usage is high"
-        },
-        "claudeUsage.statusBarDisplay": {
-          "type": "string",
-          "enum": [
-            "both",
-            "session",
-            "weekly",
-            "highest"
-          ],
-          "enumDescriptions": [
-            "Show both session (5h) and weekly (7d): e.g. 45% · 23%",
-            "Show session (5-hour window) only",
-            "Show weekly (7-day window) only",
-            "Show whichever is higher (original behavior)"
-          ],
-          "default": "both",
-          "description": "What to display in the status bar"
+    "configuration": [
+      {
+        "title": "Claude Status Bar",
+        "order": 1,
+        "properties": {
+          "claudeUsage.updateInterval": {
+            "type": "number",
+            "default": 300,
+            "order": 1,
+            "description": "Update interval in seconds (default: 300 = 5 minutes). Values below 30 are treated as 30. The usage endpoint refuses requests that come too often, so short intervals can leave the data older than a long one would."
+          },
+          "claudeUsage.showNotifications": {
+            "type": "boolean",
+            "default": false,
+            "order": 2,
+            "description": "Show a notification when a limit passes 90%. Each limit is announced once per reset period."
+          },
+          "claudeUsage.statusBarDisplay": {
+            "type": "string",
+            "enum": [
+              "both",
+              "session",
+              "weekly",
+              "highest",
+              "custom"
+            ],
+            "enumDescriptions": [
+              "Session (5h) and weekly (7d): e.g. 45% · 23%",
+              "Session (5-hour window) only",
+              "Weekly (7-day window) only",
+              "The highest of all limits that can raise a warning",
+              "Your own layout, written in Status Bar Format below"
+            ],
+            "default": "both",
+            "order": 3,
+            "description": "What to display in the status bar."
+          }
+        }
+      },
+      {
+        "title": "Custom Format",
+        "order": 2,
+        "properties": {
+          "claudeUsage.statusBarFormat": {
+            "type": "string",
+            "default": "✼ {5h}% · {7d}%[ - S:{sonnet}][ - O:{opus}][ - F:{fable}]",
+            "markdownDescription": "Layout of the status bar, used only while **Status Bar Display** is set to `custom`.\n\nA name in braces inserts that limit's utilization as a whole number:\n\n- `{5h}` the session limit, `{7d}` the weekly limit\n- `{haiku}` `{sonnet}` `{opus}` `{fable}` `{mythos}` the weekly limit for one model\n- `{cowork}` `{apps}` the weekly limits for Cowork and for OAuth apps\n- `{max}` the highest limit that can raise a warning\n\nAnything else is written out as typed, so `%`, separators and [product icons](https://code.visualstudio.com/api/references/icons-in-labels) like `$(pulse)` all work. A name that is not on the list above stays visible in the status bar, so a misspelling is easy to spot.\n\nText in square brackets is left out as a whole when a limit named inside it is one the account does not have, which removes the separator along with the value: `✼ {5h}%[ · {opus}%]` shows `✼ 7%` without an Opus limit and `✼ 7% · 82%` with one.\n\nThe four characters `{` `}` `[` `]` are reserved and cannot appear in the text.\n\n**Examples**\n\n- `✼ {5h}% · {7d}%` → `✼ 7% · 3%`\n- `✼ {max}%` → `✼ 95%`\n- `{5h}/{7d}` → `7/3`\n- `$(pulse) {5h}%[ · {fable}%]` → `$(pulse) 7% · 12%`"
+          }
         }
       }
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -80,7 +99,7 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "test:unit": "npm run compile && mocha out/test/suite/progress-bar.test.js out/test/suite/time-formatter.test.js --ui tdd --color"
+    "test:unit": "npm run compile && mocha out/test/suite/progress-bar.test.js out/test/suite/time-formatter.test.js out/test/suite/fetch-policy.test.js out/test/suite/claude-client.test.js out/test/suite/usage-cache.test.js out/test/suite/usage-rows.test.js out/test/suite/usage-warnings.test.js out/test/suite/status-bar-format.test.js --ui tdd --color"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",

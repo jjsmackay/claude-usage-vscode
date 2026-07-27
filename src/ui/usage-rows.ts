@@ -1,0 +1,132 @@
+import { ClaudeUsage, UsageWindow } from '../types'
+
+export interface UsageRow {
+  label: string
+  /** Lower-case bare name, used for deduplication and as a format placeholder. */
+  key: string
+  utilization: number
+  resetsAt: string | null
+  /**
+   * Whether this row feeds the aggregate warning signals — the tooltip banner,
+   * the "highest" status bar mode and the notifications. False for OAuth-app
+   * usage: it is worth showing, but nothing the user can act on. The row's own
+   * status icon is unaffected either way.
+   */
+  usedForWarnings: boolean
+}
+
+/**
+ * Windows the API reports as their own top-level field, in the order Claude
+ * Code's own Account & usage panel lists them. Absent allowances come back as
+ * null, so a row only appears once the account actually has that limit.
+ */
+const NAMED_WINDOWS: Array<{
+  label: string
+  /** Bare name, used to recognise the same limit arriving twice. */
+  key: string
+  pick: (u: ClaudeUsage) => UsageWindow | null | undefined
+  usedForWarnings?: boolean
+}> = [
+  { label: '5h', key: '5h', pick: (u) => u.five_hour },
+  { label: '7d', key: '7d', pick: (u) => u.seven_day },
+  { label: '7d Opus', key: 'opus', pick: (u) => u.seven_day_opus },
+  { label: '7d Sonnet', key: 'sonnet', pick: (u) => u.seven_day_sonnet },
+  { label: '7d Cowork', key: 'cowork', pick: (u) => u.seven_day_cowork },
+  {
+    label: '7d Apps',
+    key: 'apps',
+    pick: (u) => u.seven_day_oauth_apps,
+    usedForWarnings: false,
+  },
+]
+
+/**
+ * Flatten everything the API reports into display rows.
+ *
+ * Per-model weekly allowances exist only inside `limits`, so they are pulled
+ * from there; the `session` and `weekly_all` entries of that array are skipped
+ * because they repeat `five_hour` and `seven_day`, which are already rows.
+ */
+export function buildUsageRows(usage: ClaudeUsage): UsageRow[] {
+  const rows: UsageRow[] = []
+
+  const seen = new Set<string>()
+
+  for (const { label, key, pick, usedForWarnings } of NAMED_WINDOWS) {
+    const window = pick(usage)
+    if (window == null) {
+      continue
+    }
+    seen.add(key)
+    rows.push({
+      label,
+      key,
+      utilization: window.utilization,
+      resetsAt: window.resets_at,
+      usedForWarnings: usedForWarnings ?? true,
+    })
+  }
+
+  for (const limit of usage.limits ?? []) {
+    if (limit.kind !== 'weekly_scoped') {
+      continue
+    }
+    const name = limit.scope?.model?.display_name
+    if (!name || seen.has(name.toLowerCase())) {
+      continue
+    }
+    // A scoped allowance the account is not actually subject to is reported at
+    // 0% and inactive. Claude Code leaves those out, and a row permanently
+    // reading 0% carries no information, so only show one that is either in use
+    // or marked active.
+    if (limit.percent <= 0 && limit.is_active !== true) {
+      continue
+    }
+    seen.add(name.toLowerCase())
+    rows.push({
+      // Scoped limits are weekly, so they carry the same 7d prefix as the
+      // named weekly windows.
+      label: `7d ${name}`,
+      key: name.toLowerCase(),
+      utilization: limit.percent,
+      resetsAt: limit.resets_at,
+      usedForWarnings: true,
+    })
+  }
+
+  return rows
+}
+
+/**
+ * Highest utilization among the limits that warnings are based on.
+ *
+ * Shared by the tooltip banner, the "highest" status bar mode and the
+ * notifications, so all three agree on which limits count.
+ */
+export function highestWarningUtilization(rows: UsageRow[]): number {
+  return rows
+    .filter((r) => r.usedForWarnings)
+    .reduce((max, r) => Math.max(max, r.utilization), 0)
+}
+
+/**
+ * One-line summary of purchased usage credits, or null when the account has
+ * none enabled.
+ */
+export function formatExtraUsage(usage: ClaudeUsage): string | null {
+  const extra = usage.extra_usage
+  if (!extra || !extra.is_enabled) {
+    return null
+  }
+
+  const parts: string[] = []
+  if (extra.utilization != null) {
+    parts.push(`${Math.round(extra.utilization)}% used`)
+  }
+  if (extra.used_credits != null && extra.monthly_limit != null) {
+    const currency = extra.currency ? ` ${extra.currency}` : ''
+    parts.push(`${extra.used_credits} of ${extra.monthly_limit}${currency}`)
+  }
+
+  return parts.length > 0 ? parts.join(' · ') : 'enabled'
+}
